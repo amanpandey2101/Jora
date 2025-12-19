@@ -102,7 +102,7 @@ const Home = () => {
               </Button>
             </Link>
             <Link href="#features">
-              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full glass hover:bg-white/10 border-white/20 text-white">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full glass hover:bg-white/10 border-white/20 text-black">
                 Learn More
               </Button>
             </Link>
