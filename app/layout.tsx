@@ -1,22 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Kanit } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import Navbar from "@/components/ui/Navbar";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
-
-// [#D62828]
-// [#F77F00]
-// [#FCBF49]
-// [#EAE2B7]
-
-const kanit = Kanit({
-  subsets: ["latin"],
-  weight: ["100", "200", "400", "500"], // Include the weights you need
-  style: ["normal", "italic"], // Include the styles you need
-  display: "swap", // Improves performance by swapping fonts after loading
-});
+const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Zora",
@@ -34,21 +24,42 @@ export default function RootLayout({
   return (
     <ClerkProvider 
       appearance={{
+        baseTheme: undefined,
         elements: {
-          formButtonPrimary: "text-white bg-blue-400 hover:bg-blue-600",
+          formButtonPrimary: "text-white bg-primary hover:bg-primary/90",
+          card: "bg-white/80 dark:bg-gray-950/90 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-2xl",
+          headerTitle: "text-foreground",
+          headerSubtitle: "text-muted-foreground",
+          socialButtonsBlockButton: "bg-white/5 border-white/10 text-foreground hover:bg-white/10",
+          formFieldLabel: "text-foreground",
+          formFieldInput: "bg-transparent border border-input text-foreground focus:ring-primary focus:border-primary",
+          footerActionLink: "text-primary hover:text-primary/90",
+          footer: "text-muted-foreground bg-transparent"
         },
+        variables: {
+          colorPrimary: "#7c3aed",
+          colorInputBackground: "transparent", 
+          colorInputText: "inherit"
+        }
       }}
     >
-      <html lang="en">
-      <body className={`${kanit.className} dotted-background`}>
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-          <Toaster richColors/>
-           <footer className="bg-[#D62828]">
-            <div className="container mx-auto py-4 text-center text-gray-200">
-              <p>Made with ❤️, by Aman✨</p>
-            </div>
-          </footer> 
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${outfit.className} cosmic-bg text-foreground min-h-screen flex flex-col`}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Navbar />
+            <main className="flex-grow pt-20">{children}</main>
+            <Toaster richColors/>
+             {/* <footer className="border-t border-black/5 dark:border-white/5 py-8 mt-12 bg-white/20 dark:bg-black/20 backdrop-blur-sm">
+              <div className="container mx-auto text-center text-muted-foreground">
+                <p>Made with ❤️, by Aman✨</p>
+              </div>
+            </footer>  */}
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

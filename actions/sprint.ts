@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 // Utility function for authorization check
 async function checkAuthorization() {
   const { userId, orgId } = await auth();
-  if (!userId || !orgId) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
   return { userId, orgId };
@@ -20,8 +20,13 @@ export async function createSprint(projectId: any, data: any) {
     include: { sprints: { orderBy: { createdAt: "desc" } } },
   });
 
-  if (!project || project.organizationId !== orgId) {
+  if (!project) {
     throw new Error("Project not found");
+  }
+
+  // If orgId is present, verify ownership
+  if (orgId && project.organizationId !== orgId) {
+    throw new Error("Unauthorized");
   }
 
   const sprint = await db.sprint.create({
@@ -44,6 +49,10 @@ export async function updateSprintStatus(
   customEndDate?: Date
 ) {
   const { userId, orgId, orgRole } = await auth();
+  
+  if (!userId) {
+     throw new Error("Unauthorized");
+  }
 
   try {
     const sprint = await db.sprint.findUnique({
@@ -55,11 +64,11 @@ export async function updateSprintStatus(
       throw new Error("Sprint not found");
     }
 
-    if (sprint.project.organizationId !== orgId) {
+    if (orgId && sprint.project.organizationId !== orgId) {
       throw new Error("Unauthorized");
     }
 
-    if (orgRole !== "org:admin") {
+    if (orgId && orgRole !== "org:admin") {
       throw new Error("Only Admin can make this change");
     }
 

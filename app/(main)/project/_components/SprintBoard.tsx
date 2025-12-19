@@ -1,10 +1,14 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { motion, AnimatePresence } from "framer-motion";
 import SprintManager from "./SprintManager";
+import AISprintAnalytics from "@/components/ui/AISprintAnalytics";
 import statuses from "@/data/status.json";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, BarChart3, Brain, Eye, EyeOff } from "lucide-react";
 import IssueCreationDrawer from "./CreateIssues";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
@@ -14,13 +18,14 @@ import { getIssuesForSprint, updateIssueOrder } from "@/actions/issue";
 import { toast } from "sonner";
 import BoardFilters from "./BoardFilters";
 
-function SprintBoard({ sprints = [], projectId, orgId }: any) {
+function SprintBoard({ sprints = [], projectId, orgId, projectName, projectDescription }: any) {
   const [currentSprint, setCurrentSprint] = useState(
     sprints.find((spr: any) => spr?.status === "ACTIVE") || sprints[0] || null
   );
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   function reorder(list: any, startIndex: any, endIndex: any) {
     const result = Array.from(list);
@@ -44,7 +49,7 @@ function SprintBoard({ sprints = [], projectId, orgId }: any) {
   }: any = useFetch(getIssuesForSprint);
 
   const [filteredIssues, setFilteredIssues] = useState(issues);
-  const handleFilterChange = (newFilteredIssues:any) => {
+  const handleFilterChange = (newFilteredIssues: any) => {
     setFilteredIssues(newFilteredIssues);
   };
 
@@ -138,10 +143,32 @@ function SprintBoard({ sprints = [], projectId, orgId }: any) {
     updateIssueOrderFn(sortedIssues);
   };
 
-  
+  const getColumnStats = (status: string) => {
+    const columnIssues = filteredIssues?.filter((issue: any) => issue.status === status) || [];
+    return {
+      count: columnIssues.length,
+      urgentCount: columnIssues.filter((issue: any) => issue.priority === 'URGENT').length,
+      highCount: columnIssues.filter((issue: any) => issue.priority === 'HIGH').length,
+    };
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'TODO': return 'bg-gray-500';
+      case 'IN_PROGRESS': return 'bg-blue-500';
+      case 'IN_REVIEW': return 'bg-yellow-500';
+      case 'DONE': return 'bg-green-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
   return (
-    <div className="">
+    <motion.div 
+      className="relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <SprintManager
         sprint={currentSprint}
         setSprint={setCurrentSprint}
@@ -149,78 +176,196 @@ function SprintBoard({ sprints = [], projectId, orgId }: any) {
         projectId={projectId}
       />
 
+      {/* Analytics Toggle */}
+      <motion.div 
+        className="flex justify-end mb-4 mx-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Button
+          onClick={() => setShowAnalytics(!showAnalytics)}
+          variant="outline"
+          className="smooth-hover"
+        >
+          {showAnalytics ? (
+            <>
+              <EyeOff className="h-4 w-4 mr-2" />
+              Hide Analytics
+            </>
+          ) : (
+            <>
+              <Brain className="h-4 w-4 mr-2" />
+              Show AI Analytics
+            </>
+          )}
+        </Button>
+      </motion.div>
+
+      {/* AI Analytics Section */}
+      <AnimatePresence>
+        {showAnalytics && currentSprint && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mx-10 mb-6"
+          >
+            <AISprintAnalytics 
+              sprintData={{
+                ...currentSprint,
+                issues: issues || []
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {issues && !issuesLoading && (
-        <BoardFilters issues={issues} onFilterChange={handleFilterChange} />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <BoardFilters issues={issues} onFilterChange={handleFilterChange} />
+        </motion.div>
       )}
 
       {issuesLoading && (
-        <BarLoader className="mt-4" width={"100%"} color="#36d7b7" />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-4"
+        >
+          <BarLoader width={"100%"} color="#36d7b7" />
+        </motion.div>
       )}
-      {/* Kanban board */}
 
-     
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10 bg-[#867c45]  uppercase p-4 text-white mx-10 rounded-lg mb-36 ">
-          {statuses.map((column) => (
-            <Droppable key={column.key} droppableId={column.key}>
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="space-y-2"
+      {/* Enhanced Kanban Board */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.6 }}
+      >
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10 p-6 mx-10 rounded-2xl mb-36 glass-card">
+            {statuses.map((column, columnIndex) => {
+              const stats = getColumnStats(column.key);
+              
+              return (
+                <motion.div
+                  key={column.key}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * columnIndex, duration: 0.4 }}
                 >
-                  <h3 className="font-semibold mb-2 text-center">
-                    {column.name}
-                  </h3>
-                  <hr />
-                  {/* issues */}
-                  {filteredIssues?.filter((issue: any) => issue.status === column.key)
-                    .map((issue: any, index: any) => (
-                      <Draggable
-                        key={issue.id}
-                        draggableId={issue.id}
-                        index={index}
-                        isDragDisabled={updateIssuesLoading}
+                  <Droppable droppableId={column.key}>
+                    {(provided, snapshot) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className={`
+                          space-y-3 p-4 rounded-xl min-h-96 transition-all duration-300
+                          ${snapshot.isDraggingOver ? 'bg-primary/10 border-2 border-primary/30' : 'bg-card/50 dark:bg-card/30 border border-border'}
+                          shadow-lg hover:shadow-xl backdrop-blur-sm
+                        `}
                       >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                          >
-                            <IssueCard
-                              issue={issue}
-                              onDelete={() => fetchIssues(currentSprint.id)}
-                              onUpdate={(updated: any) =>
-                                setIssues((issues: any) =>
-                                  issues.map((issue: any) => {
-                                    if (issue.id === updated.id) return updated;
-                                    return issue;
-                                  })
-                                )
-                              }
-                            />
+                        {/* Column Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-3 h-3 rounded-full ${getStatusColor(column.key)}`} />
+                            <h3 className="font-bold text-foreground text-sm uppercase tracking-wide">
+                              {column.name}
+                            </h3>
                           </div>
+                          <div className="flex items-center space-x-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {stats.count}
+                            </Badge>
+                            {stats.urgentCount > 0 && (
+                              <Badge className="bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 text-xs">
+                                 {stats.urgentCount}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+                        {/* Issues */}
+                        <div className="space-y-3">
+                          {filteredIssues?.filter((issue: any) => issue.status === column.key)
+                            .map((issue: any, index: any) => (
+                              <Draggable
+                                key={issue.id}
+                                draggableId={issue.id}
+                                index={index}
+                                isDragDisabled={updateIssuesLoading}
+                              >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`
+                                      ${snapshot.isDragging ? 'rotate-3 scale-105' : ''}
+                                      transition-all duration-200
+                                    `}
+                                  >
+                                    <motion.div
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                    >
+                                      <IssueCard
+                                        issue={issue}
+                                        onDelete={() => fetchIssues(currentSprint.id)}
+                                        onUpdate={(updated: any) =>
+                                          setIssues((issues: any) =>
+                                            issues.map((issue: any) => {
+                                              if (issue.id === updated.id) return updated;
+                                              return issue;
+                                            })
+                                          )
+                                        }
+                                      />
+                                    </motion.div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                        </div>
+
+                        {provided.placeholder}
+
+                  
+                        {column.key === "TODO" && (
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Button
+                              variant="ghost"
+                              className="w-full border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 h-20 rounded-xl"
+                              onClick={() => handleAddIssue(column.key)}
+                            >
+                              <div className="flex flex-col items-center space-y-2">
+                                <Plus className="h-6 w-6 text-gray-400" />
+                                <span className="text-sm text-gray-600">Create Issue</span>
+                              </div>
+                            </Button>
+                          </motion.div>
                         )}
-                      </Draggable>
-                    ))}
-                  {provided.placeholder}
-                  {column.key === "TODO" && (
-                    <Button
-                      variant="ghost"
-                      className="w-full"
-                      onClick={() => handleAddIssue(column.key)}
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Issue
-                    </Button>
-                  )}
-                </div>
-              )}
-            </Droppable>
-          ))}
-        </div>
-      </DragDropContext>
+                      </div>
+                    )}
+                  </Droppable>
+                </motion.div>
+              );
+            })}
+          </div>
+        </DragDropContext>
+      </motion.div>
+
       <IssueCreationDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -229,8 +374,10 @@ function SprintBoard({ sprints = [], projectId, orgId }: any) {
         projectId={projectId}
         onIssueCreated={handleIssueCreated}
         orgId={orgId}
+        projectName={projectName}
+        projectDescription={projectDescription}
       />
-    </div>
+    </motion.div>
   );
 }
 

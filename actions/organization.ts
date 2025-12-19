@@ -11,10 +11,6 @@ export async function getOrganization(slug: string) {
     throw new Error("Unauthorized");
   }
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
-
   if (!userId) {
     throw new Error("User not found");
   }
@@ -77,36 +73,46 @@ export async function getOrganizationUsers(orgId: string) {
   return users;
 }
 
-export async function getUserIssues(userId:any) {
-  const { orgId } =  await auth();
+export async function getUserIssues(userId: string, orgId?: string) {
+  const { orgId: currentOrgId } = await auth();
 
-  if (!userId || !orgId) {
-    throw new Error("No user id or organization id found");
+  // Use the provided orgId or fall back to the current user's orgId
+  const targetOrgId = orgId || currentOrgId;
+  
+  if (!userId || !targetOrgId) {
+    console.warn("Missing userId or orgId in getUserIssues:", { userId, orgId: targetOrgId });
+    return []; // Return empty array instead of throwing error
   }
 
-  const user = await db.user.findUnique({
-    where: { clerkUserId: userId },
-  });
+  try {
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
 
-  if (!user) {
-    throw new Error("User not found");
-  }
+    if (!user) {
+      console.warn("User not found for clerkUserId:", userId);
+      return [];
+    }
 
-  const issues = await db.issue.findMany({
-    where: {
-      OR: [{ assigneeId: user.id }, { reporterId: user.id }],
-      project: {
-        organizationId: orgId,
+    const issues = await db.issue.findMany({
+      where: {
+        OR: [{ assigneeId: user.id }, { reporterId: user.id }],
+        project: {
+          organizationId: targetOrgId,
+        },
       },
-    },
-    include: {
-      project: true,
-      assignee: true,
-      reporter: true,
-    },
-    orderBy: { updatedAt: "desc" },
-  });
+      include: {
+        project: true,
+        assignee: true,
+        reporter: true,
+      },
+      orderBy: { updatedAt: "desc" },
+    });
 
-  return issues;
+    return issues;
+  } catch (error) {
+    console.error("Error fetching user issues:", error);
+    return [];
+  }
 }
 

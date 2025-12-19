@@ -8,10 +8,14 @@ import { auth } from "@clerk/nextjs/server";
 const Organization = async ({ params }: any) => {
   const { orgId } = await params;
   const organization = await getOrganization(orgId);
-  const {userId} = await auth();
+  const { userId } = await auth();
 
   if (!organization) {
     return <div>Organization not found</div>;
+  }
+
+  if (!userId) {
+    return <div>Please sign in to view this page</div>;
   }
 
   return (
@@ -26,7 +30,7 @@ const Organization = async ({ params }: any) => {
         <ProjectList orgId={organization.id}/>
       </div>
       <div className="mb-4">
-        <UserIssues userId={userId}/>
+        <UserIssues userId={userId} orgId={orgId} />
       </div>
     </div>
   );

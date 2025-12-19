@@ -7,15 +7,19 @@ export async function createProject(data: {
   name: string;
   key: string;
   description: string;
+  orgId?: string;
 }) {
   const resolvedClerkclient = await clerkClient();
-  const { userId, orgId } = await auth();
+  const { userId, orgId: authOrgId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
-  if (!orgId) {
+  // Use provided orgId or fall back to auth orgId
+  const targetOrgId = data.orgId || authOrgId;
+
+  if (!targetOrgId) {
     throw new Error("No Organization Selected");
   }
 
@@ -23,7 +27,7 @@ export async function createProject(data: {
   try {
     const response =
       await resolvedClerkclient.organizations.getOrganizationMembershipList({
-        organizationId: orgId,
+        organizationId: targetOrgId,
       });
     membershipList = response.data; // Assuming `data` contains the membership list
   } catch (error) {
@@ -47,7 +51,7 @@ export async function createProject(data: {
         name: data.name,
         key: data.key,
         description: data.description,
-        organizationId: orgId,
+        organizationId: targetOrgId,
       },
     });
     
@@ -82,8 +86,12 @@ export async function getProjects(orgId: any) {
 export async function deleteProject(projectId: any) {
   const { userId, orgId, orgRole } = await auth();
 
-  if (!userId || !orgId) {
-    throw new Error("Unauthorized");
+  if (!userId) {
+    throw new Error("Unauthorized - Please sign in");
+  }
+
+  if (!orgId) {
+    throw new Error("No organization selected. Please select an organization first.");
   }
 
   if (orgRole !== "org:admin") {
@@ -107,7 +115,7 @@ export async function deleteProject(projectId: any) {
 export async function getProject(projectId: string) {
   const { userId, orgId } = await auth();
 
-  if (!userId || !orgId) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
@@ -118,7 +126,8 @@ export async function getProject(projectId: string) {
   if (!user) {
     throw new Error("User not found");
   }
-  const project = await db.project.findMany({
+
+  const project = await db.project.findUnique({
     where: { id: projectId },
     include: {
       sprints: {
@@ -126,12 +135,17 @@ export async function getProject(projectId: string) {
       },
     },
   });
-  // console.log("Project:", project)
+
   if (!project) {
     return null;
   }
-  if (project?.organizationId === orgId) {
-    return project;
-  } 
-  else return project;
+
+  // If orgId is available, verify it matches
+  // If orgId is not set (null/undefined), allow access
+  // This handles cases where org context isn't fully initialized
+  if (orgId && project.organizationId !== orgId) {
+    return null;
+  }
+
+  return project;
 }

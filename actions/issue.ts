@@ -1,4 +1,3 @@
-
 "use server";
 
 import { db } from "@/lib/prisma";
@@ -6,9 +5,9 @@ import { auth } from "@clerk/nextjs/server";
 
 
 export async function getIssuesForSprint(sprintId:any) {
-  const { userId, orgId } = await  auth();
+  const { userId } = await  auth();
 
-  if (!userId || !orgId) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
@@ -28,15 +27,17 @@ export async function getIssuesForSprint(sprintId:any) {
 
 
 export async function createIssue(projectId :any, data:any) {
-  const { userId, orgId } =  await auth();
+  const { userId } =  await auth();
 
-
-
-  if (!userId || !orgId) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
   let user = await db.user.findUnique({ where: { clerkUserId: userId } });
+  
+  if (!user) {
+    throw new Error("User not found");
+  }
 
   const lastIssue = await db.issue.findFirst({
     where: { projectId, status: data.status },
@@ -67,9 +68,9 @@ export async function createIssue(projectId :any, data:any) {
 }
 
 export async function updateIssueOrder(updatedIssues:any) {
-  const { userId, orgId } = await  auth();
+  const { userId } = await  auth();
 
-  if (!userId || !orgId) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
@@ -91,9 +92,9 @@ export async function updateIssueOrder(updatedIssues:any) {
 }
 
 export async function deleteIssue(issueId:any) {
-  const { userId, orgId } = await auth();
+  const { userId } = await auth();
 
-  if (!userId || !orgId) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
@@ -129,7 +130,7 @@ export async function deleteIssue(issueId:any) {
 export async function updateIssue(issueId :any, data:any) {
   const { userId, orgId } = await  auth();
 
-  if (!userId || !orgId) {
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
@@ -143,7 +144,7 @@ export async function updateIssue(issueId :any, data:any) {
       throw new Error("Issue not found");
     }
 
-    if (issue.project.organizationId !== orgId) {
+    if (orgId && issue.project.organizationId !== orgId) {
       throw new Error("Unauthorized");
     }
 
