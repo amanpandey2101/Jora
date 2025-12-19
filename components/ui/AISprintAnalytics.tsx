@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { Button } from './button';
@@ -8,10 +8,8 @@ import { Badge } from './badge';
 import { 
   BarChart3, 
   TrendingUp, 
-  AlertTriangle, 
   CheckCircle, 
   Clock, 
-  Users,
   Brain,
   Loader2
 } from 'lucide-react';
@@ -48,16 +46,9 @@ const AISprintAnalytics: React.FC<AISprintAnalyticsProps> = ({
   className
 }) => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(false);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
-  useEffect(() => {
-    if (sprintData?.issues) {
-      calculateAnalytics();
-    }
-  }, [sprintData]);
-
-  const calculateAnalytics = () => {
+  const calculateAnalytics = useCallback(() => {
     const issues = sprintData.issues || [];
     const totalIssues = issues.length;
     const completedIssues = issues.filter(issue => issue.status === 'DONE').length;
@@ -73,7 +64,13 @@ const AISprintAnalytics: React.FC<AISprintAnalyticsProps> = ({
       completionRate,
       aiInsights: ''
     });
-  };
+  }, [sprintData]);
+
+  useEffect(() => {
+    if (sprintData?.issues) {
+      calculateAnalytics();
+    }
+  }, [sprintData, calculateAnalytics]);
 
   const generateAIInsights = async () => {
     if (!sprintData) return;
@@ -111,15 +108,6 @@ const AISprintAnalytics: React.FC<AISprintAnalyticsProps> = ({
       toast.error('Failed to generate AI insights');
     } finally {
       setInsightsLoading(false);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'done': return 'text-green-600';
-      case 'in_progress': return 'text-blue-600';
-      case 'todo': return 'text-gray-600';
-      default: return 'text-gray-600';
     }
   };
 
@@ -282,15 +270,15 @@ const AISprintAnalytics: React.FC<AISprintAnalyticsProps> = ({
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    h1: ({node, ...props}) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
-                    h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-3 mb-2" {...props} />,
-                    h3: ({node, ...props}) => <h3 className="text-md font-bold mt-2 mb-1" {...props} />,
-                    p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
-                    ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2" {...props} />,
-                    ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2" {...props} />,
-                    li: ({node, ...props}) => <li className="mb-1" {...props} />,
-                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-purple-300 pl-4 italic my-2" {...props} />,
-                    code: ({node, ...props}) => <code className="bg-gray-100 dark:bg-gray-800 rounded px-1" {...props} />,
+                    h1: ({...props}) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
+                    h2: ({...props}) => <h2 className="text-lg font-bold mt-3 mb-2" {...props} />,
+                    h3: ({...props}) => <h3 className="text-md font-bold mt-2 mb-1" {...props} />,
+                    p: ({...props}) => <p className="mb-2 leading-relaxed" {...props} />,
+                    ul: ({...props}) => <ul className="list-disc pl-4 mb-2" {...props} />,
+                    ol: ({...props}) => <ol className="list-decimal pl-4 mb-2" {...props} />,
+                    li: ({...props}) => <li className="mb-1" {...props} />,
+                    blockquote: ({...props}) => <blockquote className="border-l-4 border-purple-300 pl-4 italic my-2" {...props} />,
+                    code: ({...props}) => <code className="bg-gray-100 dark:bg-gray-800 rounded px-1" {...props} />,
                   }}
                 >
                   {analytics.aiInsights}
