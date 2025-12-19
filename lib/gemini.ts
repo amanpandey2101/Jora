@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-export const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+export const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
 export async function generateTaskSuggestions(projectDescription: string, existingTasks: string[]) {
   const prompt = `
@@ -25,7 +25,7 @@ export async function generateTaskSuggestions(projectDescription: string, existi
 
   try {
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response =  result.response;
     const text = response.text();
     
     // Clean the response to extract JSON
@@ -56,7 +56,7 @@ export async function generateTaskDescription(taskTitle: string, projectContext:
 
   try {
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response =  result.response;
     return response.text();
   } catch (error) {
     console.error('Error generating task description:', error);
@@ -81,7 +81,7 @@ export async function analyzeSprint(sprintData: any) {
 
   try {
     const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response =  result.response;
     return response.text();
   } catch (error) {
     console.error('Error analyzing sprint:', error);

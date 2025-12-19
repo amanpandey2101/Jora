@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 interface SprintData {
   id: string;
   name: string;
@@ -274,9 +277,24 @@ const AISprintAnalytics: React.FC<AISprintAnalyticsProps> = ({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="prose prose-sm max-w-none"
+                className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
               >
-                <p className="text-gray-700 whitespace-pre-wrap">{analytics.aiInsights}</p>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({node, ...props}) => <h1 className="text-xl font-bold mt-4 mb-2" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-3 mb-2" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-md font-bold mt-2 mb-1" {...props} />,
+                    p: ({node, ...props}) => <p className="mb-2 leading-relaxed" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2" {...props} />,
+                    li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-purple-300 pl-4 italic my-2" {...props} />,
+                    code: ({node, ...props}) => <code className="bg-gray-100 dark:bg-gray-800 rounded px-1" {...props} />,
+                  }}
+                >
+                  {analytics.aiInsights}
+                </ReactMarkdown>
               </motion.div>
             ) : (
               <div className="text-center py-6">
