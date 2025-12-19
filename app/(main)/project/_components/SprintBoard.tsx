@@ -6,9 +6,8 @@ import SprintManager from "./SprintManager";
 import AISprintAnalytics from "@/components/ui/AISprintAnalytics";
 import statuses from "@/data/status.json";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, BarChart3, Brain, Eye, EyeOff } from "lucide-react";
+import { Plus, Brain, EyeOff } from "lucide-react";
 import IssueCreationDrawer from "./CreateIssues";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
@@ -60,6 +59,7 @@ function SprintBoard({ sprints = [], projectId, orgId, projectName, projectDescr
     if (currentSprint.id) {
       fetchIssues(currentSprint.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSprint.id]);
 
   const handleIssueCreated = () => {

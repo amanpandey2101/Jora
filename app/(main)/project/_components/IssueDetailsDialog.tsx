@@ -84,6 +84,7 @@ export default function IssueDetailsDialog({
     if (updated) {
       onUpdate(updated);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deleted, updated, deleteLoading, updateLoading]);
 
   const canChange =

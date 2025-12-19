@@ -15,7 +15,6 @@ import UserAvatar from "@/components/ui/UserAvatar";
 import { useRouter } from "next/navigation";
 import IssueDetailsDialog from "./IssueDetailsDialog";
 import { 
-  Clock, 
   AlertTriangle, 
   Flag, 
   User,

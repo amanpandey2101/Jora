@@ -70,6 +70,7 @@ const SprintManager = ({ sprint, setSprint, sprints }: any) => {
         setStatus(selectedSprint.status);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, sprints]);
 
   useEffect(() => {
@@ -80,6 +81,7 @@ const SprintManager = ({ sprint, setSprint, sprints }: any) => {
         status: updatedStatus.sprint.status,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updatedStatus, loading]);
 
   return (
