@@ -33,7 +33,6 @@ import {
   Wand2, 
   Loader2, 
   CheckCircle, 
-  Clock,
   AlertCircle,
   User,
   FileText,
@@ -90,6 +89,7 @@ export default function IssueCreationDrawer({
     if (isOpen && orgId) {
       fetchUsers(orgId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, orgId]);
 
   const onSubmit = async (data: any) => {
@@ -146,6 +146,7 @@ export default function IssueCreationDrawer({
       onIssueCreated();
       toast.success("Issue created successfully !!");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newIssue, createIssueLoading]);
 
   const priorityColors = {

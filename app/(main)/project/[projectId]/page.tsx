@@ -1,7 +1,6 @@
 import { getProject } from "@/actions/project";
 import { notFound } from "next/navigation";
 import React from "react";
-import { motion } from "framer-motion";
 import SprintCreationForm from "../_components/SprintCreationForm";
 import SprintBoard from "../_components/SprintBoard";
 
